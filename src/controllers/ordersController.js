@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const pool = require('../db/pool');
 
 module.exports = {
@@ -48,11 +49,13 @@ module.exports = {
       );
 
       // verifyProductAndQuantity
-      orderItems.forEach(async (element) => {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const element of orderItems) {
         if (element.product_quantity <= 0) {
           res.status(400).json({
             error: `Product #${element.product_id} quantity must be greater than 0`,
           });
+          await client.query('ROLLBACK');
           return;
         }
 
@@ -73,16 +76,17 @@ module.exports = {
             res.status(400).json({
               error: `Product #${element.product_id} is out of stock`,
             });
+            await client.query('ROLLBACK');
             return;
           }
           res.status(400).json({
             error: `Product #${element.product_id} quantity (${element.product_quantity}) must be less than or equal to ${productActualQuantity.rows[0].quantity}`,
           });
+          await client.query('ROLLBACK');
+          return;
         }
-      });
 
-      // insertOrderItems
-      orderItems.forEach(async (element) => {
+        // insertOrderItems
         await client.query(
           'INSERT INTO order_items (product_name, product_value, product_quantity, order_id) VALUES ($1, $2, $3, $4)',
           [
@@ -92,27 +96,13 @@ module.exports = {
             insertOrder.rows[0].id,
           ]
         );
-      });
 
-      // decreaseProductQuantity
-      orderItems.forEach(async (element) => {
-        const productActualQuantity2 = await client.query(
-          'SELECT quantity FROM products WHERE id = $1',
-          [element.product_id]
-        );
-
-        if (!productActualQuantity2.rows.length) {
-          res
-            .status(404)
-            .json({ error: `Product #${element.product_id} does not exist` });
-          return;
-        }
-
+        // decreaseProductQuantity
         await client.query('UPDATE products SET quantity = $1 WHERE id = $2', [
-          productActualQuantity2.rows[0].quantity - element.product_quantity,
+          productActualQuantity.rows[0].quantity - element.product_quantity,
           element.product_id,
         ]);
-      });
+      }
 
       await client.query('COMMIT');
 
