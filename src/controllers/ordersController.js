@@ -13,21 +13,24 @@ module.exports = {
   },
 
   async show(req, res) {
-    // pegar dados da pedido,
-    // pegar os produtos e qtd do pedido
     const orderId = req.params.id;
 
     try {
       const order = await pool.query(
-        'SELECT * FROM orders o INNER JOIN order_items or ON o.id = oi.order_id WHERE o.id = $1',
+        'SELECT client_name, client_email, client_cpf, client_phone, date FROM orders WHERE id = $1',
         [orderId]
       );
 
-      // if (!order.rows.length) {
-      //   res.status(404).json({ error: 'Product not found' });
-      // } else {
-      //   res.status(404).json({ order });
-      // }
+      const orderedItems = await pool.query(
+        'SELECT product_name, product_value, product_quantity FROM order_items oi INNER JOIN orders o ON oi.order_id = o.id WHERE o.id = $1',
+        [orderId]
+      );
+
+      if (!order.rows.length) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      res.json({ ...order.rows[0], orderItems: orderedItems.rows });
     } catch (err) {
       res.status(500).json({ error: 'Server error' });
     }
@@ -36,6 +39,10 @@ module.exports = {
   async create(req, res) {
     const { clientName, clientEmail, clientCpf, clientPhone, orderItems } =
       req.body;
+
+    if (!orderItems.length) {
+      return res.status(404).json({ error: 'Must order at least one item' });
+    }
 
     const client = await pool.connect();
 
