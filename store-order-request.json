@@ -1,0 +1,26 @@
+{
+  "clientName": "Rodrigo",
+  "clientEmail": "rodrigo@gmail.com",
+  "clientCpf": "50747643825",
+  "clientPhone": "19995827544",
+  "orderItems": [
+    {
+      "product_id": "12",
+      "product_name": "Ryzen 7",
+      "product_value": "2500.99",
+      "product_quantity": "1"
+    },
+    {
+      "product_id": "13",
+      "product_name": "Ryzen 5",
+      "product_value": "2500.99",
+      "product_quantity": "2"
+    },
+    {
+      "product_id": "14",
+      "product_name": "Ryzen 3",
+      "product_value": "2500.99",
+      "product_quantity": "3"
+    }
+  ]
+}
