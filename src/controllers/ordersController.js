@@ -4,7 +4,7 @@ const pool = require('../db/pool');
 module.exports = {
   async index(_req, res) {
     try {
-      const orders = await pool.query('SELECT * FROM orders ORDER BY id');
+      const orders = await pool.query('SELECT * FROM orders ORDER BY id DESC');
 
       res.json(orders.rows);
     } catch (err) {
